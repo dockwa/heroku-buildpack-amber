@@ -94,12 +94,17 @@ PATH="${PATH}:${BUILD_DIR}/bin"
 cd $BUILD_DIR
 eval $(parse_yaml shard.yml "shard_")
 
+[ -f $ENV_DIR/AMBER_ENCRYPTION_KEY ] && export "AMBER_ENCRYPTION_KEY=$(cat $ENV_DIR/AMBER_ENCRYPTION_KEY)"
+echo -n $AMBER_ENCRYPTION_KEY > .encryption_key
+
 for target in $(compgen -A variable | grep shard_targets | sed 's/shard_targets_\(.*\)_main/\1/g'); do
   start "Building src/${target}.cr (auto-detected from shard.yml)"
     AMBER_ENV=production crystal build --release --no-debug $BUILD_DIR/src/${target}.cr -o $BUILD_DIR/bin/${target}
     chmod +x $BUILD_DIR/bin/${target}
   finished
 done
+
+rm .encryption_key
 
 # Export shard_name to be used by release script
 echo ${shard_name} > /tmp/shard_name
